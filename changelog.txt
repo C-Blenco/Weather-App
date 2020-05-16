@@ -1,0 +1,13 @@
+// May 10, 2020
+  - Initial commit
+  
+// May 12, 2020
+  James:
+    - Test commit
+  Conor:
+    - Test commit
+ 
+// May 16, 2020
+  Conor:
+    - Created RequestAPI class to handle API Requests using androids Volley library
+    - Basic button added to test request, and display as a toast
