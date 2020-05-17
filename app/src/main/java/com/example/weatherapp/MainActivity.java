@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -22,8 +23,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onResponse(JSONObject response) {
+            // Toast for test purposes
             Toast.makeText(MainActivity.this, "Response " + response.toString(), Toast.LENGTH_LONG).show();
             Log.d("MainActivity ", "onResponse");
+            updateLocation(response);
         }
     };
 
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    Location current_location;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +57,16 @@ public class MainActivity extends AppCompatActivity {
                 RequestAPI.requestJSON(MainActivity.this, 37.8259, 145.0972, responseListener, errorListener);
             }
         });
-
-
-
     }
+
+    private void updateLocation(JSONObject jsonObject) {
+        // TODO: if the Location object already created for "name", update instead of new Location object
+        current_location = new Location(jsonObject);
+
+        Log.d("MainActivity", "updateLocation");
+        TextView text = findViewById(R.id.textView);
+        text.setText(current_location.getTemp() + current_location.getDescription());
+    }
+
+    // TODO: Create update fields function to update visual display from current_location Location object
 }
