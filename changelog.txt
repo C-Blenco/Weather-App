@@ -11,3 +11,9 @@
   Conor:
     - Created RequestAPI class to handle API Requests using androids Volley library
     - Basic button added to test request, and display as a toast
+
+// May 17, 2020
+  Conor:
+    - Created Location object to process JSON and store data such as temp, lat, long, datetime, etc. per location
+    - Location object allows for simple getTemperature, getDescription calls, which will help when updating UI
+      in the future
