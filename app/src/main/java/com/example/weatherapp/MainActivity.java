@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,30 +57,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Places.initialize(getApplicationContext(), getApplicationContext().getString(R.string.MAPS_API_KEY));
-
-
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-        // Specify the types of place data to return.
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
-
-        // Set up a PlaceSelectionListener to handle the response.
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
-                Log.i("Main", "Place: " + place.getName() + ", " + place.getId());
-            }
-
-            @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.
-                Log.i("Main", "An error occurred: " + status);
-            }
-        });
-
 
         // Button for testing
         Button button = findViewById(R.id.button);
@@ -91,7 +68,15 @@ public class MainActivity extends AppCompatActivity {
                 RequestAPI.requestJSON(MainActivity.this, -37.8259, 145.0972, responseListener, errorListener);
             }
         });
+
+        startSplash();
     }
+
+    public void startSplash() {
+        Intent intent = new Intent(this, SplashActivity.class);
+        startActivity(intent);
+    }
+
 
     private void updateLocation(JSONObject jsonObject) {
         // TODO: if the Location object already created for "name", update instead of new Location object

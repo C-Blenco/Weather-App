@@ -11,71 +11,68 @@
         android:id="@+id/logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.493"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.075"
         app:srcCompat="@drawable/logo" />
 
     <TextView
         android:id="@+id/hiThereText"
         android:layout_width="333dp"
         android:layout_height="71dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="128dp"
         android:fontFamily="@font/opensanssemibold"
         android:text="Hi There!"
+        android:textAlignment="viewStart"
         android:textColor="#FFFFFF"
         android:textSize="50dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.205"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.384" />
+        app:layout_constraintTop_toBottomOf="@+id/logo"/>
 
     <TextView
         android:id="@+id/enterLocationToBeginText"
         android:layout_width="290dp"
         android:layout_height="32dp"
+        android:layout_marginStart="16dp"
         android:fontFamily="@font/opensanslight"
         android:text="Enter your location to begin"
         android:textColor="#FFFFFF"
         android:textSize="22dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.132"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/hiThereText"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/hiThereText" />
 
-    <EditText
-        android:id="@+id/location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/edittextstyle"
-        android:ems="10"
-        android:inputType="textPostalAddress"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.08"
+    <LinearLayout
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="18dp"
+        android:background="#FFFFFF"
+        app:layout_constraintBottom_toTopOf="@+id/getLocationButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.531" />
+        app:layout_constraintTop_toBottomOf="@+id/enterLocationToBeginText">
+
+        <fragment
+            android:id="@+id/autocomplete_fragment"
+            android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/getLocationButton"
         android:layout_width="142dp"
         android:layout_height="38dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="280dp"
         android:background="@drawable/editbuttonshape"
-        android:text="Get location"
         android:fontFamily="@font/opensanslight"
+        android:text="Get location"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.049"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.612" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
