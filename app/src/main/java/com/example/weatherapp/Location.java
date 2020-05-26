@@ -5,6 +5,8 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 public class Location {
     public double getLatitude() {
         return latitude;
@@ -23,11 +25,11 @@ public class Location {
         return description;
     }
 
-    public int getDatetimeAsof() {
+    public Date getDatetimeAsof() {
         return datetime_asof;
     }
 
-    public int getDatetimeRequested() {
+    public Date getDatetimeRequested() {
         return datetime_requested;
     }
 
@@ -36,8 +38,8 @@ public class Location {
     private double longitude;
     private double temp;
     private String description; // Weather description (e.g. cloudy)
-    private int datetime_asof; // The datetime returned by the API
-    private int datetime_requested; // datetime of last request/refresh
+    private Date datetime_asof; // The datetime returned by the API
+    private Date datetime_requested; // datetime of last request/refresh
 
     public Location(JSONObject jsonObject) {
         try {
@@ -57,7 +59,7 @@ public class Location {
         temp = current.getDouble("temp");
         // description is stored in a JSONObject inside an array
         description = current.getJSONArray("weather").optJSONObject(0).getString("main");
-        datetime_asof = current.getInt("dt");
+        datetime_asof = new Date(current.getLong("dt"));
 
         // TODO: Set datetime requested
     }

@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Weather App</string>
+
+    <!--
+    API keys are inserted here for basic development and testing purposes only.
+    If we were creating the actual app, it would be restricted properly
+    -->
     <string name="OPENWEATHER_API_KEY">4606210c7b69078ba88b2c9b8c9deaa5</string>
+    <string name="MAPS_API_KEY">AIzaSyB0c19_2FEWyV4WhXcDDIj6-JhTDLKFFx4</string>
 </resources>

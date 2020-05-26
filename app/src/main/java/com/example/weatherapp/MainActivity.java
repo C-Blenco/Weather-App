@@ -11,9 +11,17 @@ import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.common.api.Status;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -47,6 +55,31 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Places.initialize(getApplicationContext(), getApplicationContext().getString(R.string.MAPS_API_KEY));
+
+
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        // Specify the types of place data to return.
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+
+        // Set up a PlaceSelectionListener to handle the response.
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                Log.i("Main", "Place: " + place.getName() + ", " + place.getId());
+            }
+
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i("Main", "An error occurred: " + status);
+            }
+        });
+
+
         // Button for testing
         Button button = findViewById(R.id.button);
 
@@ -54,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RequestAPI.requestJSON(MainActivity.this, 37.8259, 145.0972, responseListener, errorListener);
+                RequestAPI.requestJSON(MainActivity.this, -37.8259, 145.0972, responseListener, errorListener);
             }
         });
     }
@@ -65,7 +98,9 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("MainActivity", "updateLocation");
         TextView text = findViewById(R.id.textView);
-        text.setText(current_location.getTemp() + current_location.getDescription());
+
+        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+        text.setText(current_location.getTemp() + format1.format(current_location.getDatetimeAsof()));
     }
 
     // TODO: Create update fields function to update visual display from current_location Location object
