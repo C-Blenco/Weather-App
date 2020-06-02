@@ -17,3 +17,14 @@
     - Created Location object to process JSON and store data such as temp, lat, long, datetime, etc. per location
     - Location object allows for simple getTemperature, getDescription calls, which will help when updating UI
       in the future
+
+// May 26, 2020
+  Conor:
+    - Use Google Maps Places API in order to search for locations
+    - General testing of Places autocompletefragment
+    
+// June 2, 2020
+  Conor:
+    - Add Places API autocomplete fragment to Splash screen
+    - Return location data from splash to main activity and request weather data for location
+    - Create better visuals for testing (weather data now returns after splash activity)
