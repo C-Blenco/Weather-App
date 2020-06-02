@@ -8,6 +8,10 @@ import org.json.JSONObject;
 import java.util.Date;
 
 public class Location {
+    public String getName() {
+        return name;
+    }
+
     public double getLatitude() {
         return latitude;
     }
@@ -18,7 +22,7 @@ public class Location {
 
     public String getTemp() {
         // TODO: Round up
-        return Double.toString(temp);
+        return String.valueOf((int) temp);
     }
 
     public String getDescription() {
@@ -33,7 +37,7 @@ public class Location {
         return datetime_requested;
     }
 
-    private String name; // will have to be set from initial geocoding
+    private String name;
     private double latitude;
     private double longitude;
     private double temp;
@@ -41,7 +45,8 @@ public class Location {
     private Date datetime_asof; // The datetime returned by the API
     private Date datetime_requested; // datetime of last request/refresh
 
-    public Location(JSONObject jsonObject) {
+    public Location(JSONObject jsonObject, String locName) {
+        name = locName;
         try {
             processJSON(jsonObject);
         } catch (JSONException e) {

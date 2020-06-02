@@ -1,29 +1,19 @@
 package com.example.weatherapp;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.google.android.gms.common.api.Status;
-import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -51,42 +41,54 @@ public class MainActivity extends AppCompatActivity {
     };
 
     Location current_location;
+    String locName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-        // Button for testing
-        Button button = findViewById(R.id.button);
-
-        // On click, request dummy weather data
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                RequestAPI.requestJSON(MainActivity.this, -37.8259, 145.0972, responseListener, errorListener);
-            }
-        });
-
         startSplash();
     }
 
     public void startSplash() {
         Intent intent = new Intent(this, SplashActivity.class);
-        startActivity(intent);
+        startActivityForResult(intent, 1);
     }
 
 
     private void updateLocation(JSONObject jsonObject) {
         // TODO: if the Location object already created for "name", update instead of new Location object
-        current_location = new Location(jsonObject);
+        current_location = new Location(jsonObject, locName);
 
         Log.d("MainActivity", "updateLocation");
-        TextView text = findViewById(R.id.textView);
+        TextView temp = findViewById(R.id.tempText);
+        TextView loc = findViewById(R.id.locText);
+        TextView desc = findViewById(R.id.descText);
 
         SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
-        text.setText(current_location.getTemp() + format1.format(current_location.getDatetimeAsof()));
+        temp.setText(current_location.getTemp() + "\u00B0");
+        loc.setText(current_location.getName());
+        desc.setText(current_location.getDescription());
+    }
+
+    private void createRequest(double latitude, double longitude) {
+        RequestAPI.requestJSON(MainActivity.this, latitude, longitude, responseListener, errorListener);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            Double latitude = data.getDoubleExtra("LATITUDE", 0);
+            Double longitude = data.getDoubleExtra("LONGITUDE", 0);
+            locName = data.getStringExtra("NAME");
+
+            Log.d("MainActivity", latitude + " " + longitude);
+
+            createRequest(latitude, longitude);
+        }
     }
 
     // TODO: Create update fields function to update visual display from current_location Location object
