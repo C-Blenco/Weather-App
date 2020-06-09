@@ -1,6 +1,10 @@
 package com.example.weatherapp;
 
 import android.util.Log;
+import android.widget.Toast;
+
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -8,6 +12,29 @@ import org.json.JSONObject;
 import java.util.Date;
 
 public class Location {
+    // Create response listener to pass to RequestAPI
+    private Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+
+        @Override
+        public void onResponse(JSONObject response) {
+            Log.d("Location ", "onResponse");
+            try {
+                processJSON(response);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    // Create error listener to pass to RequestAPI
+    private Response.ErrorListener errorListener = new Response.ErrorListener() {
+
+        @Override
+        public void onErrorResponse(VolleyError error) {
+            Log.d("Location ", "onErrorResponse");
+        }
+    };
+
     public String getName() {
         return name;
     }
@@ -69,6 +96,9 @@ public class Location {
         // TODO: Set datetime requested
     }
 
+    public void updateData() {
+        RequestAPI.getInstance().requestJSON(latitude, longitude, responseListener, errorListener);
+    }
     // TODO:
     //  - Create updateData function to update from JSONObject
 }
