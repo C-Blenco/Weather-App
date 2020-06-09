@@ -23,8 +23,26 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
+// SimpleLoc is used to store as an array of favourited locations. It is used over Location
+// as gson is unable to initialise a Location object from a json string
+class SimpleLoc {
+    public double latitude, longitude;
+    public String name;
+
+    public SimpleLoc(double latitude, double longitude, String name) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.name = name;
+    }
+
+    public boolean equals(SimpleLoc loc) {
+        return (loc.name == this.name);
+    }
+}
 
 public class MainActivity extends AppCompatActivity {
+    private SharedPreferences prefs = null;
+    private SharedPreferences.Editor prefEditor;
 
     // Create response listener to pass to RequestAPI
     private Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
@@ -48,9 +66,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    Location current_location;
+    Location currentLocation;
+    SimpleLoc currentSimpleLoc;
     String locName;
-    ArrayList<Location> savedLoc = new ArrayList<Location>();
+    ArrayList<SimpleLoc> savedLoc = new ArrayList<SimpleLoc>();
+    boolean favourited;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,19 +79,47 @@ public class MainActivity extends AppCompatActivity {
         RequestAPI.getInstance(this);
 
         Gson gson = new Gson();
-        Type savedLocType = new TypeToken<ArrayList<Location>>(){}.getType();
+        Type savedLocType = new TypeToken<ArrayList<SimpleLoc>>(){}.getType();
 
-        SharedPreferences sharedPreferences = this.getPreferences(Context.MODE_PRIVATE);
-        String prefs = sharedPreferences.getString("locations", "");
-        savedLoc = gson.fromJson(prefs, savedLocType);
+        prefs = this.getPreferences(Context.MODE_PRIVATE);
+        prefEditor = prefs.edit();
 
-        startSplash();
+        String locArrayString = prefs.getString("locations", "");
 
-        ImageView favButton = findViewById(R.id.favouriteButton);
+        if (locArrayString != "") {
+            Log.d("MainActivity", locArrayString);
+            savedLoc = gson.fromJson(locArrayString, savedLocType);
+        }
+
+        if (savedLoc.isEmpty()) {
+            startSplash();
+        }
+        else {
+            SimpleLoc loc = savedLoc.get(0);
+            currentSimpleLoc = loc;
+            createRequest(loc.latitude, loc.longitude);
+            locName = loc.name;
+            favourited = true;
+        }
+
+        final ImageView favButton = findViewById(R.id.favouriteButton);
+        if (favourited) {
+            favButton.setImageResource(R.drawable.star_solid);
+        }
+
         favButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addFavourite();
+                if (favourited) {
+                    removeFavourite();
+                    favButton.setImageResource(R.drawable.star_empty);
+                    favourited = false;
+                }
+                else {
+                    addFavourite();
+                    favButton.setImageResource(R.drawable.star_solid);
+                    favourited = true;
+                }
             }
         });
     }
@@ -84,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLocation(JSONObject jsonObject) {
         // TODO: if the Location object already created for "name", update instead of new Location object
-        current_location = new Location(jsonObject, locName);
+        currentLocation = new Location(jsonObject, locName);
 
         Log.d("MainActivity", "updateLocation");
         TextView temp = findViewById(R.id.tempText);
@@ -92,9 +140,9 @@ public class MainActivity extends AppCompatActivity {
         TextView desc = findViewById(R.id.descText);
 
         SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
-        temp.setText(current_location.getTemp() + "\u00B0");
-        loc.setText(current_location.getName());
-        desc.setText(current_location.getDescription());
+        temp.setText(currentLocation.getTemp() + "\u00B0");
+        loc.setText(currentLocation.getName());
+        desc.setText(currentLocation.getDescription());
     }
 
     private void createRequest(double latitude, double longitude) {
@@ -117,12 +165,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addFavourite() {
-        if (savedLoc.contains(current_location)) {
-            Log.d("MainActivity", "Location already saved");
+        SimpleLoc loc = new SimpleLoc(currentLocation.getLatitude(), currentLocation.getLongitude(), currentLocation.getName());
+
+        for (int i = 0; i < savedLoc.size(); i++) {
+            if (loc.equals(savedLoc.get(i))) {
+                Log.d("MainActivity", "Location already saved");
+                return;
+            }
         }
-        else {
-            savedLoc.add(current_location);
-        }
+        Log.d("MainActivity", "Add favourite " + loc.name);
+        savedLoc.add(loc);
+        currentSimpleLoc = loc;
+        Gson gson = new Gson();
+        String savedLocJson = gson.toJson(savedLoc);
+        prefEditor.putString("locations", savedLocJson);
+        prefEditor.commit();
     }
-    // TODO: Create update fields function to update visual display from current_location Location object
+
+    private void removeFavourite() {
+        Log.d("MainActivity", "Remove favourite " + currentSimpleLoc.name);
+        savedLoc.remove(currentSimpleLoc);
+        Gson gson = new Gson();
+        String savedLocJson = gson.toJson(savedLoc);
+        prefEditor.putString("locations", savedLocJson);
+        prefEditor.commit();
+    }
+    // TODO: Create update fields function to update visual display from currentLocation Location object
 }
