@@ -1,7 +1,6 @@
 package com.example.weatherapp;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -27,29 +26,6 @@ class Daily {
 }
 
 public class Location {
-    // Create response listener to pass to RequestAPI
-    private Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
-
-        @Override
-        public void onResponse(JSONObject response) {
-            Log.d("Location ", "onResponse");
-            try {
-                processJSON(response);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
-    // Create error listener to pass to RequestAPI
-    private Response.ErrorListener errorListener = new Response.ErrorListener() {
-
-        @Override
-        public void onErrorResponse(VolleyError error) {
-            Log.d("Location ", "onErrorResponse");
-        }
-    };
-
     public String getName() {
         return name;
     }
@@ -106,7 +82,7 @@ public class Location {
         temp = current.getDouble("temp");
         // description is stored in a JSONObject inside an array
         description = current.getJSONArray("weather").getJSONObject(0).getString("main");
-        datetime_requested = new Date(current.getLong("dt") * 1000);
+        datetime_requested = new Date();
 
         // Get daily data
         JSONArray daily = jsonObject.getJSONArray("daily");
@@ -123,8 +99,12 @@ public class Location {
         }
     }
 
-    public void updateData() {
-        RequestAPI.getInstance().requestJSON(latitude, longitude, responseListener, errorListener);
+    public void updateData(JSONObject jsonObject) {
+        try {
+            processJSON(jsonObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
     // TODO:
     //  - Create updateData function to update from JSONObject

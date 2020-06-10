@@ -54,8 +54,11 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResponse(JSONObject response) {
             // Toast for test purposes
-            // Toast.makeText(MainActivity.this, "Response " + response.toString(), Toast.LENGTH_LONG).show();
+//            Toast.makeText(MainActivity.this, "Response " + response.toString(), Toast.LENGTH_LONG).show();
             Log.d("MainActivity ", "onResponse");
+            if (currentLocation == null) {
+                createLocation(response);
+            }
             updateLocation(response);
         }
     };
@@ -75,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
     String locName;
     ArrayList<SimpleLoc> savedLoc = new ArrayList<SimpleLoc>();
     boolean favourited;
+    RecyclerView dailyRecylcer;
+    LinearLayoutManager layoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,22 +87,35 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         RequestAPI.getInstance(this);
 
+        // Inititalise recycler
+        dailyRecylcer = findViewById(R.id.dailyRecycler);
+        layoutManager = new LinearLayoutManager(this);
+        dailyRecylcer.setLayoutManager(layoutManager);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(dailyRecylcer.getContext(),
+                layoutManager.getOrientation());
+        dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
+        dailyRecylcer.addItemDecoration(dividerItemDecoration);
+
+        // Initialise gson
         Gson gson = new Gson();
         Type savedLocType = new TypeToken<ArrayList<SimpleLoc>>(){}.getType();
 
+        // Get preferences and initialise editor
         prefs = this.getPreferences(Context.MODE_PRIVATE);
         prefEditor = prefs.edit();
-
         String locArrayString = prefs.getString("locations", "");
 
+        // If preferences exist, get the saved locations
         if (locArrayString != "") {
             Log.d("MainActivity", locArrayString);
             savedLoc = gson.fromJson(locArrayString, savedLocType);
         }
 
+        // If the saved locations is empty (none are saved), start the splash
         if (savedLoc.isEmpty()) {
             startSplash();
         }
+        // Otherwise, choose the first favourited location and create request for it
         else {
             SimpleLoc loc = savedLoc.get(0);
             currentSimpleLoc = loc;
@@ -106,11 +124,11 @@ public class MainActivity extends AppCompatActivity {
             favourited = true;
         }
 
+        // Initialise favourited button and set onclick listener to remove/add favourite
         final ImageView favButton = findViewById(R.id.favouriteButton);
         if (favourited) {
             favButton.setImageResource(R.drawable.star_solid);
         }
-
         favButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,22 +144,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
 
-    private void populateRecycler() {
-        // Get recycler and set layoutmanager
-        RecyclerView dailyRecylcer = findViewById(R.id.dailyRecycler);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        dailyRecylcer.setLayoutManager(layoutManager);
-
-        // Adapter
-        DailyAdapter dailyAdapter = new DailyAdapter(currentLocation.getDailyTemp());
-        dailyRecylcer.setAdapter(dailyAdapter);
-
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(dailyRecylcer.getContext(),
-                layoutManager.getOrientation());
-        dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
-        dailyRecylcer.addItemDecoration(dividerItemDecoration);
+        // Initialise refresh button and set onclick listener to refresh current location
+        final ImageView refreshButton = findViewById(R.id.refreshButton);
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                createRequest(currentLocation.getLatitude(), currentLocation.getLongitude());
+            }
+        });
     }
 
     public void startSplash() {
@@ -149,22 +160,36 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, 1);
     }
 
-
-    private void updateLocation(JSONObject jsonObject) {
+    private void createLocation(JSONObject jsonObject) {
         // TODO: if the Location object already created for "name", update instead of new Location object
-        currentLocation = new Location(jsonObject, locName);
+        Location location = new Location(jsonObject, locName);
+        currentLocation = location;
+    }
+
+    public void updateLocation(JSONObject jsonObject) {
+        currentLocation.updateData(jsonObject);
 
         Log.d("MainActivity", "updateLocation");
         TextView temp = findViewById(R.id.tempText);
         TextView loc = findViewById(R.id.locText);
         TextView desc = findViewById(R.id.descText);
+        TextView refresh = findViewById(R.id.refreshText);
 
-        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
         temp.setText(currentLocation.getTemp() + "\u00B0");
         loc.setText(currentLocation.getName());
         desc.setText(currentLocation.getDescription());
 
+        SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy 'at' h:mm a");
+        String time = format.format(currentLocation.getDatetimeRequested());
+        refresh.setText("Last refresh:\n" + time);
+
         populateRecycler();
+    }
+
+    private void populateRecycler() {
+        // Adapter
+        DailyAdapter dailyAdapter = new DailyAdapter(currentLocation.getDailyTemp());
+        dailyRecylcer.setAdapter(dailyAdapter);
     }
 
     private void createRequest(double latitude, double longitude) {
