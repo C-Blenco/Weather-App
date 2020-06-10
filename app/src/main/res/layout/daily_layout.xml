@@ -9,7 +9,8 @@
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="8dp"
+        android:gravity="center_vertical">
 
 
         <TextView
@@ -27,13 +28,18 @@
             android:layout_height="wrap_content"
             android:layout_weight="1.0"
             android:textAlignment="center"/>
-        <TextView
-            android:id="@+id/descText"
-            android:text="Cloudy"
-            android:textSize="20sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.0" />
+<!--        <TextView-->
+<!--            android:id="@+id/descText"-->
+<!--            android:text="Cloudy"-->
+<!--            android:textSize="20sp"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="0.0" />-->
+        <ImageView
+            android:id="@+id/descImage"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_weight="0.0"/>
 
 
     </LinearLayout>

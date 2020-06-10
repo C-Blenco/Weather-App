@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -11,13 +12,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHolder> {
     Daily[] dailyData;
 
     public static class DailyViewHolder extends RecyclerView.ViewHolder {
-        public TextView date, temp, desc;
+        public TextView date, temp;
+        public ImageView desc;
 
         // The view holder allows us to get the resource IDs of the text views
         public DailyViewHolder(@NonNull View itemView) {
@@ -25,7 +29,7 @@ public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHol
 
             date = itemView.findViewById(R.id.dateText);
             temp = itemView.findViewById(R.id.tempText);
-            desc = itemView.findViewById(R.id.descText);
+            desc = itemView.findViewById(R.id.descImage);
         }
 
     }
@@ -48,10 +52,25 @@ public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHol
         return dailyHolder;
     }
 
+    // Suffixes for the date string
     static String[] suffixes =
             { "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th",
                     "th", "th", "th", "th", "th", "th", "th", "th", "th", "th",
                     "th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th", "th", "st" };
+
+    // Map the icon "description" from request to drawable icon
+    static Map<String, Integer> icons = new HashMap<String, Integer>();
+    static {
+        icons.put("01d", R.drawable.icon_01d);
+        icons.put("02d", R.drawable.icon_02d);
+        icons.put("03d", R.drawable.icon_03d);
+        icons.put("04d", R.drawable.icon_04d);
+        icons.put("09d", R.drawable.icon_09d);
+        icons.put("10d", R.drawable.icon_10d);
+        icons.put("11d", R.drawable.icon_11d);
+        icons.put("13d", R.drawable.icon_13d);
+        icons.put("50d", R.drawable.icon_50d);
+    }
     @Override
     public void onBindViewHolder(@NonNull DailyViewHolder holder, int position) {
         // Get the item from the array corresponding to the position of the RecyclerView
@@ -67,10 +86,10 @@ public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHol
         String day = dayNum + suffixes[dayNum];
         String tempFormat = active.getMin() + "\u00B0/" + active.getMax() + "\u00B0";
 
-        // Set the text/imageViews to display the image/news source from the array item
+        // Set the text/imageViews to display the image/temperature from the array item
         holder.date.setText(day);
         holder.temp.setText(tempFormat);
-        holder.desc.setText(active.description);
+        holder.desc.setImageResource(icons.get(active.description));
     }
 
     @Override

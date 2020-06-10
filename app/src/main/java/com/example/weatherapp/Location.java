@@ -115,7 +115,7 @@ public class Location {
             JSONObject day = daily.getJSONObject(i);
             JSONObject temp = day.getJSONObject("temp");
 
-            new_day.description = day.getJSONArray("weather").getJSONObject(0).getString("main");
+            new_day.description = day.getJSONArray("weather").getJSONObject(0).getString("icon");
             new_day.day = new Date(day.getLong("dt") * 1000);
             new_day.max = temp.getDouble("max");
             new_day.min = temp.getDouble("min");
