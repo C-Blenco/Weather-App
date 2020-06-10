@@ -11,6 +11,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -124,6 +128,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void populateRecycler() {
+        // Get recycler and set layoutmanager
+        RecyclerView dailyRecylcer = findViewById(R.id.dailyRecycler);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        dailyRecylcer.setLayoutManager(layoutManager);
+
+        // Adapter
+        DailyAdapter dailyAdapter = new DailyAdapter(currentLocation.getDailyTemp());
+        dailyRecylcer.setAdapter(dailyAdapter);
+
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(dailyRecylcer.getContext(),
+                layoutManager.getOrientation());
+        dividerItemDecoration.setDrawable(ContextCompat.getDrawable(this, R.drawable.divider));
+        dailyRecylcer.addItemDecoration(dividerItemDecoration);
+    }
+
     public void startSplash() {
         Intent intent = new Intent(this, SplashActivity.class);
         startActivityForResult(intent, 1);
@@ -143,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
         temp.setText(currentLocation.getTemp() + "\u00B0");
         loc.setText(currentLocation.getName());
         desc.setText(currentLocation.getDescription());
+
+        populateRecycler();
     }
 
     private void createRequest(double latitude, double longitude) {

@@ -6,10 +6,25 @@ import android.widget.Toast;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+
+class Daily {
+    public Date day;
+    public double max;
+    public double min;
+    public String description;
+
+    public String getMin() {
+        return String.valueOf((int) min);
+    }
+    public String getMax() {
+        return String.valueOf((int) max);
+    }
+}
 
 public class Location {
     // Create response listener to pass to RequestAPI
@@ -56,12 +71,12 @@ public class Location {
         return description;
     }
 
-    public Date getDatetimeAsof() {
-        return datetime_asof;
-    }
-
     public Date getDatetimeRequested() {
         return datetime_requested;
+    }
+
+    public Daily[] getDailyTemp() {
+        return daily_temp;
     }
 
     private String name;
@@ -69,8 +84,8 @@ public class Location {
     private double longitude;
     private double temp;
     private String description; // Weather description (e.g. cloudy)
-    private Date datetime_asof; // The datetime returned by the API
     private Date datetime_requested; // datetime of last request/refresh
+    private Daily[] daily_temp = new Daily[8];
 
     public Location(JSONObject jsonObject, String locName) {
         name = locName;
@@ -90,10 +105,22 @@ public class Location {
         JSONObject current = jsonObject.getJSONObject("current");
         temp = current.getDouble("temp");
         // description is stored in a JSONObject inside an array
-        description = current.getJSONArray("weather").optJSONObject(0).getString("main");
-        datetime_asof = new Date(current.getLong("dt"));
+        description = current.getJSONArray("weather").getJSONObject(0).getString("main");
+        datetime_requested = new Date(current.getLong("dt") * 1000);
 
-        // TODO: Set datetime requested
+        // Get daily data
+        JSONArray daily = jsonObject.getJSONArray("daily");
+        for (int i = 0; i < daily.length(); i++) {
+            Daily new_day = new Daily();
+            JSONObject day = daily.getJSONObject(i);
+            JSONObject temp = day.getJSONObject("temp");
+
+            new_day.description = day.getJSONArray("weather").getJSONObject(0).getString("main");
+            new_day.day = new Date(day.getLong("dt") * 1000);
+            new_day.max = temp.getDouble("max");
+            new_day.min = temp.getDouble("min");
+            daily_temp[i] = new_day;
+        }
     }
 
     public void updateData() {
