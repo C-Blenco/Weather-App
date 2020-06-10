@@ -71,6 +71,15 @@ public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHol
         icons.put("11d", R.drawable.icon_11d);
         icons.put("13d", R.drawable.icon_13d);
         icons.put("50d", R.drawable.icon_50d);
+        icons.put("01n", R.drawable.icon_01d);
+        icons.put("02n", R.drawable.icon_02d);
+        icons.put("03n", R.drawable.icon_03d);
+        icons.put("04n", R.drawable.icon_04d);
+        icons.put("09n", R.drawable.icon_09d);
+        icons.put("10n", R.drawable.icon_10d);
+        icons.put("11n", R.drawable.icon_11d);
+        icons.put("13n", R.drawable.icon_13d);
+        icons.put("50n", R.drawable.icon_50d);
     }
     @Override
     public void onBindViewHolder(@NonNull DailyViewHolder holder, int position) {
