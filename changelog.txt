@@ -40,3 +40,9 @@
     - Create recyclerview to view daily weather data
     - Ability to refresh data for current location
     - Fix daily icons
+
+// June 11, 2020
+  Conor:
+    - Fix/rewrote favourites logic
+    - Tie search button to autocomplete activity
+    - Spinner created to display favourited locations (can now switch between locations)
