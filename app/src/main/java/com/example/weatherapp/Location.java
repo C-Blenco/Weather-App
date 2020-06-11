@@ -65,11 +65,6 @@ public class Location {
 
     public Location(String locName) {
         name = locName;
-//        try {
-//            processJSON(jsonObject);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
     }
 
     private void processJSON(JSONObject jsonObject) throws JSONException {
@@ -105,9 +100,5 @@ public class Location {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-    }
-
-    public SimpleLoc toSimpleLoc() {
-        return new SimpleLoc(this.latitude, this.longitude, this.name);
     }
 }

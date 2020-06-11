@@ -35,8 +35,7 @@ public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHol
 
     }
 
-    // Constructor for the adapter, we pass in the news array created in main to
-    // set to the daily temp array
+    // Constructor for the adapter, we pass in the array created in main to set to the daily temp array
     public DailyAdapter(Daily[] dailyData) {
         this.dailyData = dailyData;
     }
@@ -92,8 +91,6 @@ public class DailyAdapter extends RecyclerView.Adapter<DailyAdapter.DailyViewHol
         // Format strings
         Calendar c = Calendar.getInstance();
         c.setTime(active.day);
-//        int dayNum = c.get(Calendar.DAY_OF_MONTH);
-//        String day = dayNum + suffixes[dayNum];
         String day = c.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault());
 
         String tempFormat = active.getMin() + "\u00B0/" + active.getMax() + "\u00B0";

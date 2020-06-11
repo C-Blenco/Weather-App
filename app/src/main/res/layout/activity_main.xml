@@ -7,16 +7,17 @@
     tools:context=".MainActivity"
     android:background="@color/colorPrimaryDark">
 
-    <TextView
-        android:id="@+id/locText"
+    <Spinner
+        android:id="@+id/locSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No location"
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:popupBackground="@color/colorPrimaryDark"
+        android:backgroundTint="#FFFFFF"
+        android:background="@null"
         app:layout_constraintBottom_toTopOf="@+id/tempText"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        android:gravity="center"/>
 
     <TextView
         android:id="@+id/tempText"

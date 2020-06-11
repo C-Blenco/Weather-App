@@ -6,7 +6,10 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,26 +35,10 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-// SimpleLoc is used to store as an array of favourited locations. It is used over Location
-// as gson is unable to initialise a Location object from a json string
-class SimpleLoc {
-    public double latitude, longitude;
-    public String name;
-
-    public SimpleLoc(double latitude, double longitude, String name) {
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.name = name;
-    }
-
-    public boolean equals(SimpleLoc loc) {
-        return (loc.name == this.name);
-    }
-}
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
     private SharedPreferences prefs = null;
@@ -63,11 +50,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onResponse(JSONObject response) {
             // Toast for test purposes
-//            Toast.makeText(MainActivity.this, "Response " + response.toString(), Toast.LENGTH_LONG).show();
+            // Toast.makeText(MainActivity.this, "Response " + response.toString(), Toast.LENGTH_LONG).show();
             Log.d("MainActivity ", "onResponse (new)");
             createLocation(response);
         }
     };
+    // Response listener for updating the current location (refresh)
     private Response.Listener<JSONObject> updateResponseListener = new Response.Listener<JSONObject>() {
 
         @Override
@@ -87,19 +75,23 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    Location currentLocation;
-    String locName;
-    Map<String, List<Double>> favourites = new HashMap<String, List<Double>>();
-    RecyclerView dailyRecylcer;
-    LinearLayoutManager layoutManager;
-    ImageView favButton;
+    private Location currentLocation;
+    private String locName;
+    private Map<String, List<Double>> favourites = new LinkedHashMap<String, List<Double>>();
+    private RecyclerView dailyRecylcer;
+    private LinearLayoutManager layoutManager;
+    private ImageView favButton;
+    private Spinner locSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Inititalise various components
         RequestAPI.getInstance(this);
         favButton = findViewById(R.id.favouriteButton);
+        locSpinner = findViewById(R.id.locSpinner);
         Places.initialize(getApplicationContext(), getApplicationContext().getString(R.string.MAPS_API_KEY));
 
         // Inititalise recycler
@@ -113,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialise gson
         Gson gson = new Gson();
-        Type favMapType = new TypeToken<HashMap<String, List<Double>>>(){}.getType();
+        Type favMapType = new TypeToken<LinkedHashMap<String, List<Double>>>(){}.getType();
 
         // Get preferences and initialise editor
         prefs = this.getPreferences(Context.MODE_PRIVATE);
@@ -134,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
         else {
             Map.Entry<String, List<Double>> entry = favourites.entrySet().iterator().next();
             switchLocation(entry.getValue().get(0), entry.getValue().get(1), entry.getKey());
+            setSpinner();
         }
 
         // Initialise favourited button and set onclick listener to remove/add favourite
@@ -161,6 +154,27 @@ public class MainActivity extends AppCompatActivity {
                 startSearch();
             }
         });
+
+        // Initialise the listener to detect when a new location is selected from spinner (favourites)
+        locSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d("MainActivity", "Spinner onItemSelected");
+                String selectedLoc = parent.getItemAtPosition(position).toString();
+                // If the location we select is a favourite, update location
+                // this is done as spinners natively can activate from an update of the adapter,
+                // therefore we do this to prevent querying the API multiple times.
+                if (favourites.containsKey(selectedLoc)) {
+                    List<Double> coords = favourites.get(selectedLoc);
+                    switchLocation(coords.get(0), coords.get(1), selectedLoc);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d("MainActivity", "Spinner onNothingSelected");
+            }
+        });
     }
 
     public void startSplash() {
@@ -184,22 +198,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateLocation(JSONObject jsonObject) {
+        Log.d("MainActivity", "updateLocation");
         currentLocation.updateData(jsonObject);
 
-        Log.d("MainActivity", "updateLocation");
         TextView temp = findViewById(R.id.tempText);
-        TextView loc = findViewById(R.id.locText);
         TextView desc = findViewById(R.id.descText);
         TextView refresh = findViewById(R.id.refreshText);
 
+        // Set the temperature and description text
         temp.setText(currentLocation.getTemp() + "\u00B0");
-        loc.setText(currentLocation.getName());
         desc.setText(currentLocation.getDescription());
 
+        // Format and set the date of last refresh/update
         SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy 'at' h:mm a");
         String time = format.format(currentLocation.getDatetimeRequested());
         refresh.setText("Last refresh:\n" + time);
 
+        // Populate the daily weather recycler
         populateRecycler();
     }
 
@@ -209,10 +224,14 @@ public class MainActivity extends AppCompatActivity {
         dailyRecylcer.setAdapter(dailyAdapter);
     }
 
+    // createRequest for update
     private void createRequest() {
-        RequestAPI.getInstance().requestJSON(currentLocation.getLatitude(), currentLocation.getLongitude(), updateResponseListener, errorListener);
+        if (currentLocation != null) {
+            RequestAPI.getInstance().requestJSON(currentLocation.getLatitude(), currentLocation.getLongitude(), updateResponseListener, errorListener);
+        }
     }
 
+    // createRequest for new location
     private void createRequest(double latitude, double longitude) {
         RequestAPI.getInstance().requestJSON(latitude, longitude, newResponseListener, errorListener);
     }
@@ -221,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
+        // SplashActivity result
         if (requestCode == 1) {
             Double latitude = data.getDoubleExtra("LATITUDE", 0);
             Double longitude = data.getDoubleExtra("LONGITUDE", 0);
@@ -230,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
 
             switchLocation(latitude, longitude, name);
         }
+        // Search activity result
         if (requestCode == 2) {
             if (resultCode == RESULT_OK) {
                 Place place = Autocomplete.getPlaceFromIntent(data);
@@ -242,39 +263,73 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void toggleFavourite() {
+        // If current location is a favourite, remove it and toggle the star image
         if (favourites.containsKey(currentLocation.getName())) {
             favourites.remove(currentLocation.getName());
             favButton.setImageResource(R.drawable.star_empty);
         }
+        // Else if current location is not a favourite, add it and toggle the star image
         else {
             List<Double> coords = Arrays.asList(currentLocation.getLatitude(), currentLocation.getLongitude());
             favourites.put(currentLocation.getName(), coords);
             favButton.setImageResource(R.drawable.star_solid);
         }
+        // Save favourites using gson
         Gson gson = new Gson();
         String favouriteGson = gson.toJson(favourites);
         prefEditor.putString("favourites", favouriteGson);
         prefEditor.commit();
     }
 
-    private void removeFavourite() {
-        favourites.remove(currentLocation.getName());
-        Gson gson = new Gson();
-        String favouriteGson = gson.toJson(favourites);
-        prefEditor.putString("locations", favouriteGson);
-        prefEditor.commit();
-    }
-
+    // Used to switch locations when a new one is selected or searched for
     private void switchLocation(Double latitude, Double longitude, String name) {
+        // If the location is a favourite, ensure the image resource changes
         if (favourites.containsKey(name)) {
+            Log.d("MainActivity", "switchLocation (fav)");
             favButton.setImageResource(R.drawable.star_solid);
-            createRequest(latitude, longitude);
-            locName = name;
         }
         else {
+            Log.d("MainActivity", "switchLocation");
             favButton.setImageResource(R.drawable.star_empty);
-            createRequest(latitude, longitude);
-            locName = name;
+        }
+        createRequest(latitude, longitude);
+        locName = name;
+        setSpinner();
+    }
+
+    // boolean value for the first spinner call to prevent creating new adapter each time
+    boolean setSpinnerCall = true;
+    // stores the names of the favourite locations
+    ArrayAdapter<String> spinnerArrayAdapter;
+    private void setSpinner() {
+        // Convert favourite keys to array for spinner adapter
+        Set<String> keys = favourites.keySet();
+        List<String> locList = new ArrayList<>(Arrays.asList(keys.toArray(new String[keys.size()])));
+        // if location isn't a favourite, add to the front of the array and set spinner location
+        // to it to display the name
+        if (!favourites.containsKey(locName)) {
+            locList.add(0, locName);
+            locSpinner.setSelection(0);
+        }
+        // otherwise set it to the location of the favourited location
+        else {
+            locSpinner.setSelection(locList.indexOf(locName));
+        }
+
+        // if first spinnner call
+        if (setSpinnerCall) {
+            spinnerArrayAdapter = new ArrayAdapter<String>
+                    (this, R.layout.spinner_layout,
+                            locList);
+            spinnerArrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_layout);
+            locSpinner.setAdapter(spinnerArrayAdapter);
+            setSpinnerCall = false;
+        }
+        // otherwise, update adapter
+        else {
+            spinnerArrayAdapter.clear();
+            spinnerArrayAdapter.addAll(locList);
+            spinnerArrayAdapter.notifyDataSetChanged();
         }
     }
 }
