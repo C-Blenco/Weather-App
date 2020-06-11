@@ -28,3 +28,15 @@
     - Add Places API autocomplete fragment to Splash screen
     - Return location data from splash to main activity and request weather data for location
     - Create better visuals for testing (weather data now returns after splash activity)
+    
+// June 9, 2020
+  Conor:
+    - Change RequestAPI so it can be utitlised in multiple classes, begin work on favourite locations
+    - Functionality later added to favourite a location
+    
+// June 10, 2020
+  Conor:
+    - Add functionality to process daily weather data.
+    - Create recyclerview to view daily weather data
+    - Ability to refresh data for current location
+    - Fix daily icons
