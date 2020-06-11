@@ -18,6 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -26,6 +31,10 @@ import org.json.JSONObject;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 // SimpleLoc is used to store as an array of favourited locations. It is used over Location
 // as gson is unable to initialise a Location object from a json string
@@ -49,16 +58,21 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences.Editor prefEditor;
 
     // Create response listener to pass to RequestAPI
-    private Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+    private Response.Listener<JSONObject> newResponseListener = new Response.Listener<JSONObject>() {
 
         @Override
         public void onResponse(JSONObject response) {
             // Toast for test purposes
 //            Toast.makeText(MainActivity.this, "Response " + response.toString(), Toast.LENGTH_LONG).show();
-            Log.d("MainActivity ", "onResponse");
-            if (currentLocation == null) {
-                createLocation(response);
-            }
+            Log.d("MainActivity ", "onResponse (new)");
+            createLocation(response);
+        }
+    };
+    private Response.Listener<JSONObject> updateResponseListener = new Response.Listener<JSONObject>() {
+
+        @Override
+        public void onResponse(JSONObject response) {
+            Log.d("MainActivity ", "onResponse (update)");
             updateLocation(response);
         }
     };
@@ -74,18 +88,19 @@ public class MainActivity extends AppCompatActivity {
     };
 
     Location currentLocation;
-    SimpleLoc currentSimpleLoc;
     String locName;
-    ArrayList<SimpleLoc> savedLoc = new ArrayList<SimpleLoc>();
-    boolean favourited;
+    Map<String, List<Double>> favourites = new HashMap<String, List<Double>>();
     RecyclerView dailyRecylcer;
     LinearLayoutManager layoutManager;
+    ImageView favButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         RequestAPI.getInstance(this);
+        favButton = findViewById(R.id.favouriteButton);
+        Places.initialize(getApplicationContext(), getApplicationContext().getString(R.string.MAPS_API_KEY));
 
         // Inititalise recycler
         dailyRecylcer = findViewById(R.id.dailyRecycler);
@@ -98,50 +113,34 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialise gson
         Gson gson = new Gson();
-        Type savedLocType = new TypeToken<ArrayList<SimpleLoc>>(){}.getType();
+        Type favMapType = new TypeToken<HashMap<String, List<Double>>>(){}.getType();
 
         // Get preferences and initialise editor
         prefs = this.getPreferences(Context.MODE_PRIVATE);
         prefEditor = prefs.edit();
-        String locArrayString = prefs.getString("locations", "");
+        String favMapString = prefs.getString("favourites", "");
 
         // If preferences exist, get the saved locations
-        if (locArrayString != "") {
-            Log.d("MainActivity", locArrayString);
-            savedLoc = gson.fromJson(locArrayString, savedLocType);
+        if (favMapString != "") {
+            Log.d("MainActivity", favMapString);
+            favourites = gson.fromJson(favMapString, favMapType);
         }
 
         // If the saved locations is empty (none are saved), start the splash
-        if (savedLoc.isEmpty()) {
+        if (favourites.isEmpty()) {
             startSplash();
         }
         // Otherwise, choose the first favourited location and create request for it
         else {
-            SimpleLoc loc = savedLoc.get(0);
-            currentSimpleLoc = loc;
-            createRequest(loc.latitude, loc.longitude);
-            locName = loc.name;
-            favourited = true;
+            Map.Entry<String, List<Double>> entry = favourites.entrySet().iterator().next();
+            switchLocation(entry.getValue().get(0), entry.getValue().get(1), entry.getKey());
         }
 
         // Initialise favourited button and set onclick listener to remove/add favourite
-        final ImageView favButton = findViewById(R.id.favouriteButton);
-        if (favourited) {
-            favButton.setImageResource(R.drawable.star_solid);
-        }
         favButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (favourited) {
-                    removeFavourite();
-                    favButton.setImageResource(R.drawable.star_empty);
-                    favourited = false;
-                }
-                else {
-                    addFavourite();
-                    favButton.setImageResource(R.drawable.star_solid);
-                    favourited = true;
-                }
+                toggleFavourite();
             }
         });
 
@@ -150,7 +149,16 @@ public class MainActivity extends AppCompatActivity {
         refreshButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createRequest(currentLocation.getLatitude(), currentLocation.getLongitude());
+                createRequest();
+            }
+        });
+
+        // Initialise search button and set onclick listener to start search activity
+        final ImageView searchButton = findViewById(R.id.searchButton);
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startSearch();
             }
         });
     }
@@ -160,10 +168,19 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, 1);
     }
 
+    public void startSearch() {
+        List<Place.Field> fields = Arrays.asList(Place.Field.NAME, Place.Field.LAT_LNG);
+
+        Intent intent = new Autocomplete.IntentBuilder(
+                AutocompleteActivityMode.FULLSCREEN, fields)
+                .build(this);
+        startActivityForResult(intent, 2);
+    }
+
     private void createLocation(JSONObject jsonObject) {
-        // TODO: if the Location object already created for "name", update instead of new Location object
-        Location location = new Location(jsonObject, locName);
+        Location location = new Location(locName);
         currentLocation = location;
+        updateLocation(jsonObject);
     }
 
     public void updateLocation(JSONObject jsonObject) {
@@ -192,8 +209,12 @@ public class MainActivity extends AppCompatActivity {
         dailyRecylcer.setAdapter(dailyAdapter);
     }
 
+    private void createRequest() {
+        RequestAPI.getInstance().requestJSON(currentLocation.getLatitude(), currentLocation.getLongitude(), updateResponseListener, errorListener);
+    }
+
     private void createRequest(double latitude, double longitude) {
-        RequestAPI.getInstance().requestJSON(latitude, longitude, responseListener, errorListener);
+        RequestAPI.getInstance().requestJSON(latitude, longitude, newResponseListener, errorListener);
     }
 
     @Override
@@ -203,39 +224,57 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1) {
             Double latitude = data.getDoubleExtra("LATITUDE", 0);
             Double longitude = data.getDoubleExtra("LONGITUDE", 0);
-            locName = data.getStringExtra("NAME");
+            String name = data.getStringExtra("NAME");
 
             Log.d("MainActivity", latitude + " " + longitude);
 
-            createRequest(latitude, longitude);
+            switchLocation(latitude, longitude, name);
+        }
+        if (requestCode == 2) {
+            if (resultCode == RESULT_OK) {
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                String name = place.getName();
+                LatLng coords = place.getLatLng();
+
+                switchLocation(coords.latitude, coords.longitude, name);
+            }
         }
     }
 
-    private void addFavourite() {
-        SimpleLoc loc = new SimpleLoc(currentLocation.getLatitude(), currentLocation.getLongitude(), currentLocation.getName());
-
-        for (int i = 0; i < savedLoc.size(); i++) {
-            if (loc.equals(savedLoc.get(i))) {
-                Log.d("MainActivity", "Location already saved");
-                return;
-            }
+    private void toggleFavourite() {
+        if (favourites.containsKey(currentLocation.getName())) {
+            favourites.remove(currentLocation.getName());
+            favButton.setImageResource(R.drawable.star_empty);
         }
-        Log.d("MainActivity", "Add favourite " + loc.name);
-        savedLoc.add(loc);
-        currentSimpleLoc = loc;
+        else {
+            List<Double> coords = Arrays.asList(currentLocation.getLatitude(), currentLocation.getLongitude());
+            favourites.put(currentLocation.getName(), coords);
+            favButton.setImageResource(R.drawable.star_solid);
+        }
         Gson gson = new Gson();
-        String savedLocJson = gson.toJson(savedLoc);
-        prefEditor.putString("locations", savedLocJson);
+        String favouriteGson = gson.toJson(favourites);
+        prefEditor.putString("favourites", favouriteGson);
         prefEditor.commit();
     }
 
     private void removeFavourite() {
-        Log.d("MainActivity", "Remove favourite " + currentSimpleLoc.name);
-        savedLoc.remove(currentSimpleLoc);
+        favourites.remove(currentLocation.getName());
         Gson gson = new Gson();
-        String savedLocJson = gson.toJson(savedLoc);
-        prefEditor.putString("locations", savedLocJson);
+        String favouriteGson = gson.toJson(favourites);
+        prefEditor.putString("locations", favouriteGson);
         prefEditor.commit();
     }
-    // TODO: Create update fields function to update visual display from currentLocation Location object
+
+    private void switchLocation(Double latitude, Double longitude, String name) {
+        if (favourites.containsKey(name)) {
+            favButton.setImageResource(R.drawable.star_solid);
+            createRequest(latitude, longitude);
+            locName = name;
+        }
+        else {
+            favButton.setImageResource(R.drawable.star_empty);
+            createRequest(latitude, longitude);
+            locName = name;
+        }
+    }
 }

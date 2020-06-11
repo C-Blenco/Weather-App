@@ -63,13 +63,13 @@ public class Location {
     private Date datetime_requested; // datetime of last request/refresh
     private Daily[] daily_temp = new Daily[8];
 
-    public Location(JSONObject jsonObject, String locName) {
+    public Location(String locName) {
         name = locName;
-        try {
-            processJSON(jsonObject);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            processJSON(jsonObject);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void processJSON(JSONObject jsonObject) throws JSONException {
@@ -106,6 +106,8 @@ public class Location {
             e.printStackTrace();
         }
     }
-    // TODO:
-    //  - Create updateData function to update from JSONObject
+
+    public SimpleLoc toSimpleLoc() {
+        return new SimpleLoc(this.latitude, this.longitude, this.name);
+    }
 }
