@@ -46,3 +46,8 @@
     - Fix/rewrote favourites logic
     - Tie search button to autocomplete activity
     - Spinner created to display favourited locations (can now switch between locations)
+    
+// June 12, 2020
+  Conor:
+    - Fix splash screen layout
+    - Create app icon
