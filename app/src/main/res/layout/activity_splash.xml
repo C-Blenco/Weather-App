@@ -44,13 +44,12 @@
         app:layout_constraintTop_toBottomOf="@+id/hiThereText" />
 
     <LinearLayout
+        android:id="@+id/linearLayout2"
         android:layout_width="300dp"
         android:layout_height="40dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="18dp"
+        android:layout_marginTop="16dp"
         android:background="#FFFFFF"
-        app:layout_constraintBottom_toTopOf="@+id/getLocationButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/enterLocationToBeginText">
 
@@ -67,12 +66,12 @@
         android:layout_width="142dp"
         android:layout_height="38dp"
         android:layout_marginStart="16dp"
-        android:layout_marginBottom="280dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/editbuttonshape"
         android:fontFamily="@font/opensanslight"
         android:text="Get location"
         android:textColor="#FFFFFF"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
